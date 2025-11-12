@@ -26,7 +26,7 @@ You can try the project yourself by following the steps:
 
 ### 1. Happy Path
 
-![Happy Path Flowchart]()
+<img width="1332" height="1262" alt="Happy Path" src="https://github.com/user-attachments/assets/11969ae3-7c4e-4435-b2a6-921f5386611a" />
 
 #### Order Initiation
 
@@ -66,7 +66,7 @@ You can try the project yourself by following the steps:
 
 ### 2. Payment Failure
 
-![Payment Failure Flowchart]()
+<img width="1332" height="1262" alt="Payment Failure" src="https://github.com/user-attachments/assets/5d82d409-8cee-413a-99b3-2e6708dfa052" />
 
 #### Order Initiation (Same as Happy Path)
 
@@ -103,7 +103,7 @@ You can try the project yourself by following the steps:
 
 ### 3. Products Shortage
 
-![Product Shortage Flowchart]()
+<img width="1332" height="682" alt="Products Shortage" src="https://github.com/user-attachments/assets/9570350e-8021-4452-b770-227f8d24246f" />
 
 #### Order Initiation
 
@@ -134,7 +134,7 @@ You can try the project yourself by following the steps:
 
 ### 4. Shipment Arrangement Failure
 
-![Shipment Arrangement Failure Flowchart]()
+<img width="1332" height="862" alt="Shipment Arrangement Failure" src="https://github.com/user-attachments/assets/ca0dbb75-9a78-4e78-8a3f-e8822b67b17e" />
 
 #### Order Initiation
 
@@ -169,6 +169,8 @@ You can try the project yourself by following the steps:
 ---
 
 ## Unexpected behaviour
+
+<img width="1326" height="561" alt="Unexpected Error" src="https://github.com/user-attachments/assets/c2f76cfb-34e5-48a9-b1bc-8015872b339f" />
 
 The system has a special tool for handling unexpected behaviour which you can use to identify what and where went wrong.
 The tool is called `dlt-service` which is dedicated to collect everything that goes to any dead-letter topic. When an
