@@ -96,7 +96,7 @@ public class OrderCommandsHandler {
         if (this.consumedMessageService.isDuplicate(cancelOrderCommand.getId())) return;
 
         // Uncomment to test error handling
-        causeException(1); // 1 - retryable, 0 - non-retryable
+        // causeException(1); // 1 - retryable, 0 - non-retryable
 
         UUID correlationId = cancelOrderCommand.getCorrelationId();
         CancelOrderPayload cancelOrderPayload = (CancelOrderPayload) cancelOrderCommand.getPayload();
