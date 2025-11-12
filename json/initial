@@ -1,0 +1,26 @@
+POST | http://localhost:8080/api/orders/create
+{
+    "customerId": "013af4aa-92dc-480e-87b4-273b5f219e44",
+    "products": [
+        {
+            "productId": "da62eb09-6daa-4eda-9435-4a0353745d3d",
+            "quantity": 1,
+            "pricePerUnit": 899.99
+        },
+        {
+            "productId": "e2eb1a19-0e02-434e-99f9-a70488143034",
+            "quantity": 1,
+            "pricePerUnit": 99.99
+        }
+    ],
+    "shippingAddress": {
+        "address": "123 Elm Street",
+        "city": "New York",
+        "postalCode": "10001",
+        "country": "USA"
+    },
+    "totalAmount": 1099.97,
+    "currency": "USD",
+    "paymentMethodId": "Apple pay",
+    "carrier": "SPEEDY"
+}

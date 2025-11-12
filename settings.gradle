@@ -1,0 +1,9 @@
+rootProject.name = "e-commerce-backend"
+
+include ("order-service")
+include ("order-saga-orchestrator")
+include ("payment-service")
+include ("product-service")
+include ("shipment-service")
+include ("shared-resources")
+include ("dlt-service")

@@ -1,0 +1,140 @@
+1. CANCEL_ORDER
+{
+  "@type": "cancelOrderCommand",
+  "id": "2e0ffce9-aa71-4237-bb72-154c4165995f",
+  "type": "COMMAND",
+  "name": "CANCEL_ORDER",
+  "timestamp": 1762784496.634422,
+  "correlationId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+  "payload": {
+    "@type": "cancelOrderPayload",
+    "orderId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+    "reason": "Reason: Incorrect cardholder number (code: 3845)"
+  }
+}
+
+2. COMPLETE_ORDER
+{
+  "@type": "completeOrderCommand",
+  "id": "73459881-9675-4253-9c23-f8b81e14aca4",
+  "type": "COMMAND",
+  "name": "COMPLETE_ORDER",
+  "timestamp": 1762783439.61912,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "completeOrderPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896"
+  }
+}
+
+3. PROCESS_PAYMENT
+{
+  "@type": "processPaymentCommand",
+  "id": "2f1b3294-c308-46b6-bde2-9a4be14bc9cb",
+  "type": "COMMAND",
+  "name": "PROCESS_PAYMENT",
+  "timestamp": 1762783420.344123,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "processPaymentPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "totalAmount": 1099.97,
+    "currency": "USD",
+    "paymentMethodId": "Apple pay"
+  }
+}
+
+4. CONFIRM_AVAILABILITY
+{
+  "@type": "confirmAvailabilityCommand",
+  "id": "24971894-55fc-4b74-b26d-fdcc1a1cfceb",
+  "type": "COMMAND",
+  "name": "CONFIRM_AVAILABILITY",
+  "timestamp": 1762783396.686292,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "confirmAvailabilityPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "productsToCheck": [
+      {
+        "productId": "88b17dfc-34b2-4fe2-98d6-82d6a23d22b0",
+        "quantity": 1
+      },
+      {
+        "productId": "36b58647-a99a-4ef6-a58b-6a87af9c30a4",
+        "quantity": 1
+      }
+    ]
+  }
+}
+
+5. UPDATE_PRODUCTS
+{
+  "@type": "updateProductsCommand",
+  "id": "c1173ab8-f287-4968-ba5c-08c783cea1b4",
+  "type": "COMMAND",
+  "name": "UPDATE_PRODUCTS",
+  "timestamp": 1762783427.195183,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "updateProductsPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "productsToDecrement": [
+      {
+        "productId": "88b17dfc-34b2-4fe2-98d6-82d6a23d22b0",
+        "quantity": 1
+      },
+      {
+        "productId": "36b58647-a99a-4ef6-a58b-6a87af9c30a4",
+        "quantity": 1
+      }
+    ]
+  }
+}
+
+8. ARRANGE_SHIPMENT
+{
+  "@type": "arrangeShipmentCommand",
+  "id": "509b78cb-afba-4faa-b545-2f3fea84ff1e",
+  "type": "COMMAND",
+  "name": "ARRANGE_SHIPMENT",
+  "timestamp": 1762783409.617633,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "arrangeShipmentPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "customerId": "013af4aa-92dc-480e-87b4-273b5f219e44",
+    "products": [
+      {
+        "productId": "88b17dfc-34b2-4fe2-98d6-82d6a23d22b0",
+        "quantity": 1
+      },
+      {
+        "productId": "36b58647-a99a-4ef6-a58b-6a87af9c30a4",
+        "quantity": 1
+      }
+    ],
+    "shippingAddress": {
+      "address": "123 Elm Street",
+      "postalCode": "10001",
+      "city": "New York",
+      "country": "USA"
+    }
+  }
+}
+
+9. CANCEL_SHIPMENT
+{
+  "@type": "cancelShipmentCommand",
+  "id": "c8461279-ac8d-4fde-aa82-8493a0111e66",
+  "type": "COMMAND",
+  "name": "CANCEL_SHIPMENT",
+  "timestamp": 1762784485.752155,
+  "correlationId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+  "payload": {
+    "@type": "cancelShipmentPayload",
+    "orderId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+    "shipmentId": "7759dead-5bdd-40ec-a8eb-cfb0a0796983",
+    "reason": "The order was not paid: Reason: Incorrect cardholder number (code: 3845)"
+  }
+}

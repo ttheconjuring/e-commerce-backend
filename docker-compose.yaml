@@ -1,0 +1,248 @@
+# This block defines all the custom networks our services will use.
+# Services on the same network can discover and talk to each other by their service name.
+networks:
+  e-commerce-network: # The name of our single, shared network.
+    driver: bridge # 'bridge' is the standard driver for a single-host docker network
+
+# This is the main block where we define all our containers (services).
+services:
+
+  # --- 1. INFRASTRUCTURE: DATABASE ---
+
+  db: # This is the PostgreSQL database service.
+    image: postgres:15 # Use the official Postgres image, version 15.
+    container_name: postgres_db # A friendly, predictable name for this container.
+    restart: always # Always restart this container if it crashes or the machine reboots.
+    environment:
+      POSTGRES_USER: postgres # Sets the superuser username for the database.
+      POSTGRES_PASSWORD: 12345 # Sets the superuser password.
+      POSTGRES_DB: init_db # The *default* database to create. Our init script will use this to connect.
+      # This is a custom variable we pass to our init script to create all our service DBs.
+      POSTGRES_MULTIPLE_DBS: dlt_service_db,orchestrator_service_db,order_service_db,payment_service_db,product_service_db,shipment_service_db
+    ports:
+      - "5432:5432" # Maps your computer's (host) port 5432 to the container's port 5432.
+    volumes:
+      # Mounts a 'named volume' called 'db_data' to the container's data directory.
+      # This makes the database data *persistent* even if the container is removed.
+      - db_data:/var/lib/postgresql/data
+      # Mounts our local init script into the Postgres init directory.
+      # This script will run once when the container is first created with an empty volume.
+      - ./init-scripts/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+    networks:
+      - e-commerce-network # Connects this service to our shared network.
+
+  pgadmin: # This is the pgAdmin service, a web GUI for managing the database.
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment: # Credentials for logging into the pgAdmin web page.
+      PGADMIN_DEFAULT_EMAIL: example@email.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      # Maps your computer's port 5050 to the container's *internal* port 80.
+      # You will access the pgAdmin UI at http://localhost:5050
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin # Persists pgAdmin's own data (like server connections you save).
+    depends_on:
+      - db # Tells Compose to start the 'db' service before starting this one.
+    networks:
+      - e-commerce-network
+
+  # --- 2. INFRASTRUCTURE: KAFKA CLUSTER (KRaft-based) ---
+
+  broker-1: # This is the first broker in our 3-broker Kafka cluster.
+    image: apache/kafka:latest
+    container_name: broker-1
+    ports:
+      # This maps your *host* port 9092 to the *external* listener port 9092.
+      # This is for connecting from your host machine (e.g., a Kafka UI).
+      - "9092:9092"
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_KRAFT_CLUSTER_ID=skP-6inQQ169IaQLtq2ZOg # A unique ID for the cluster.
+      - KAFKA_PROCESS_ROLES=controller, broker # Runs as both controller and broker (KRaft mode).
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker-1:9091, 2@broker-2:9091, 3@broker-3:9091 # Tells all brokers where to find the other controller/voters.
+      # --- Listener Configuration (CRITICAL) ---
+      # 1. Opens port 9090 for internal container-to-container traffic.
+      # 2. Opens port 9091 for the controller to talk to.
+      # 3. Opens port 9092 for external traffic from the host machine.
+      - KAFKA_LISTENERS=PLAINTEXT://:9090, CONTROLLER://:9091, EXTERNAL://:9092
+      # --- Advertised Listeners (EVEN MORE CRITICAL) ---
+      # Tells clients how to connect to those listeners.
+      # 1. Tells internal clients (like our Java apps) to use 'broker-1:9090'.
+      # 2. Tells external clients (like your UI) to use 'localhost:9092'.
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker-1:9090, EXTERNAL://localhost:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT, EXTERNAL:PLAINTEXT, PLAINTEXT:PLAINTEXT # Maps the listener names to a security protocol.
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER # Specifies which listener the KRaft controllers use to communicate.
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT # Specifies which listener brokers should use for internal data replication.
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true # Enables automatic topic creation
+      - KAFKA_DELETE_TOPIC_ENABLE=true # Allows you to delete topics using the command-line tools. Very useful for cleaning up during development.
+    networks:
+      - e-commerce-network
+
+  broker-2: # The second broker, with identical config but different ports/IDs.
+    image: apache/kafka:latest
+    container_name: broker-2
+    ports:
+      - "9094:9094" # Mapped to host port 9094 for external access.
+    environment:
+      - KAFKA_NODE_ID=2
+      - KAFKA_KRAFT_CLUSTER_ID=skP-6inQQ169IaQLtq2ZOg
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker-1:9091, 2@broker-2:9091, 3@broker-3:9091
+      - KAFKA_LISTENERS=PLAINTEXT://:9090, CONTROLLER://:9091, EXTERNAL://:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker-2:9090, EXTERNAL://localhost:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT, EXTERNAL:PLAINTEXT, PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_DELETE_TOPIC_ENABLE=true
+    networks:
+      - e-commerce-network
+
+  broker-3: # The third broker.
+    image: apache/kafka:latest
+    container_name: broker-3
+    ports:
+      - "9096:9096" # Mapped to host port 9096 for external access.
+    environment:
+      - KAFKA_NODE_ID=3
+      - KAFKA_KRAFT_CLUSTER_ID=skP-6inQQ169IaQLtq2ZOg
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker-1:9091,2@broker-2:9091,3@broker-3:9091
+      - KAFKA_LISTENERS=PLAINTEXT://:9090, CONTROLLER://:9091, EXTERNAL://:9096
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker-3:9090, EXTERNAL://localhost:9096
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT, EXTERNAL:PLAINTEXT, PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_DELETE_TOPIC_ENABLE=true
+    networks:
+      - e-commerce-network
+
+  # --- 3. APPLICATION: JAVA MICROSERVICES ---
+
+  # --- Product Service ---
+  product-service: # This is a background worker service (no 'ports' exposed).
+    image: product-service:0.0.1-SNAPSHOT # Uses the custom image you built with './gradlew :product-service:bootBuildImage'.
+    container_name: product-service
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # Tells Spring to connect to Kafka using the internal broker names and ports.
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      # Tells Spring to connect to the DB using the 'db' service name and its specific database.
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/product_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on: # Best practice: wait for infrastructure to start first.
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+  # --- Order Service ---
+  order-service: # This is a public-facing web service.
+    image: order-service:0.0.1-SNAPSHOT
+    container_name: order-service
+    ports:
+      # Maps your computer's port 8080 to the container's port 8080.
+      # This is the main API endpoint you'll hit: http://localhost:8080
+      - "8080:8080"
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/order_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+  # --- Payment Service ---
+  payment-service: # Background worker.
+    image: payment-service:0.0.1-SNAPSHOT
+    container_name: payment-service
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/payment_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+  # --- Shipment Service ---
+  shipment-service: # Background worker.
+    image: shipment-service:0.0.1-SNAPSHOT
+    container_name: shipment-service
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shipment_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+  # --- Order Saga Orchestrator ---
+  order-saga-orchestrator: # Background worker.
+    image: order-saga-orchestrator:0.0.1-SNAPSHOT
+    container_name: order-saga-orchestrator
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/orchestrator_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+  # --- DLT Service ---
+  dlt-service: # This is a public-facing web service (e.g., for querying DLT).
+    image: dlt-service:0.0.1-SNAPSHOT
+    container_name: dlt-service
+    ports:
+      # Maps your computer's port 8081 to the container's port 8080.
+      # You can access this service at http://localhost:8081
+      - "8081:8080"
+    networks:
+      - e-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker-1:9090,broker-2:9090,broker-3:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/dlt_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - db
+      - broker-1
+      - broker-2
+      - broker-3
+
+# This block officially defines the named volumes we used above.
+# This allows the data to persist and be managed by Docker.
+volumes:
+  db_data:
+  pgadmin_data:

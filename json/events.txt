@@ -1,0 +1,202 @@
+1. ORDER_CANCELLED
+{
+  "@type": "orderCancelledEvent",
+  "id": "291ee1d1-b92d-494a-96ed-1daa3a64df8a",
+  "type": "EVENT",
+  "name": "ORDER_CANCELLED",
+  "timestamp": 1762784501.198136,
+  "correlationId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+  "payload": {
+    "@type": "orderCancelledPayload",
+    "orderId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+    "finalStatus": "CANCELLED",
+    "reason": "Reason: Incorrect cardholder number (code: 3845)"
+  }
+}
+
+2. ORDER_COMPLETED
+{
+  "@type": "orderCompletedEvent",
+  "id": "fea5438b-5104-4465-8c3b-6c4cf8ee868f",
+  "type": "EVENT",
+  "name": "ORDER_COMPLETED",
+  "timestamp": 1762783442.291902,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "orderCompletedPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "finalStatus": "COMPLETED"
+  }
+}
+
+3. ORDER_CREATED
+{
+  "@type": "orderCreatedEvent",
+  "id": "1a5851ab-53c8-4dfd-802d-93b28799e851",
+  "type": "EVENT",
+  "name": "ORDER_CREATED",
+  "timestamp": 1762783389.785773,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "orderCreatedPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "customerId": "013af4aa-92dc-480e-87b4-273b5f219e44",
+    "products": [
+      {
+        "productId": "88b17dfc-34b2-4fe2-98d6-82d6a23d22b0",
+        "quantity": 1,
+        "pricePerUnit": 899.99
+      },
+      {
+        "productId": "36b58647-a99a-4ef6-a58b-6a87af9c30a4",
+        "quantity": 1,
+        "pricePerUnit": 99.99
+      }
+    ],
+    "shippingAddress": {
+      "address": "123 Elm Street",
+      "postalCode": "10001",
+      "city": "New York",
+      "country": "USA"
+    },
+    "totalAmount": 1099.97,
+    "currency": "USD",
+    "paymentMethodId": "Apple pay",
+    "carrier": "SPEEDY"
+  }
+}
+
+4. PAYMENT_FAILED
+{
+  "@type": "paymentFailedEvent",
+  "id": "d7f64749-10c3-4d8e-b109-cb7060026ea8",
+  "type": "EVENT",
+  "name": "PAYMENT_FAILED",
+  "timestamp": 1762784481.234625,
+  "correlationId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+  "payload": {
+    "@type": "paymentFailedPayload",
+    "orderId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+    "reason": "Reason: Incorrect cardholder number (code: 3845)",
+    "processedAt": 1762784481.23464
+  }
+}
+
+5. PAYMENT_SUCCEEDED
+{
+  "@type": "paymentSucceededEvent",
+  "id": "b35eff49-73a1-4ba8-9d07-c1bd52922834",
+  "type": "EVENT",
+  "name": "PAYMENT_SUCCEEDED",
+  "timestamp": 1762783422.273107,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "paymentSucceededPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "transactionId": "OOAP9Z329XOBBBK"
+  }
+}
+
+6. AVAILABILITY_CONFIRMED
+{
+  "@type": "availabilityConfirmedEvent",
+  "id": "a52a9b32-56a3-4271-9d1c-25c24cb293a1",
+  "type": "EVENT",
+  "name": "AVAILABILITY_CONFIRMED",
+  "timestamp": 1762783402.232082,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "availabilityConfirmedPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896"
+  }
+}
+
+7. PRODUCTS_SHORTAGE
+{
+  "@type": "productsShortageEvent",
+  "id": "9b6426e7-2a03-47ab-9307-7b65b8f6ba53",
+  "type": "EVENT",
+  "name": "PRODUCTS_SHORTAGE",
+  "timestamp": 1762785692.894755,
+  "correlationId": "755235ef-ef2d-48b0-a404-580eecdc1ed0",
+  "payload": {
+    "@type": "productsShortagePayload",
+    "orderId": "755235ef-ef2d-48b0-a404-580eecdc1ed0",
+    "reason": "The requested quantity exceeds the available quantity for 2 products.\n1. 7e860774-0adb-41b5-a7d3-f630649b8f50 (requested: 100, available: 80)\n2. 744e74b1-a678-4f9b-a9c4-4d28e243599d (requested: 100, available: 50)\n",
+    "outOfStockProducts": [
+      {
+        "productId": "7e860774-0adb-41b5-a7d3-f630649b8f50",
+        "requestedQuantity": 100,
+        "availableQuantity": 80
+      },
+      {
+        "productId": "744e74b1-a678-4f9b-a9c4-4d28e243599d",
+        "requestedQuantity": 100,
+        "availableQuantity": 50
+      }
+    ]
+  }
+}
+
+8. PRODUCTS_UPDATED
+{
+  "@type": "productsUpdatedEvent",
+  "id": "94fdd3f2-1539-4480-8e2a-42656673c81a",
+  "type": "EVENT",
+  "name": "PRODUCTS_UPDATED",
+  "timestamp": 1762783432.276715,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "productsUpdatedPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896"
+  }
+}
+
+
+9. ARRANGEMENT_FAILED
+{
+  "@type": "arrangementFailedEvent",
+  "id": "60965583-9764-43df-be22-08d388ed5c34",
+  "type": "EVENT",
+  "name": "ARRANGEMENT_FAILED",
+  "timestamp": 1762786077.648745,
+  "correlationId": "8480371a-e48b-49de-962f-da822aaf9eee",
+  "payload": {
+    "@type": "arrangementFailedPayload",
+    "orderId": "8480371a-e48b-49de-962f-da822aaf9eee",
+    "reason": "Reason: The address is well-formed but cannot be verified by an address validation service. (code: address_not_verified)",
+    "failedAt": 1762786077.648762
+  }
+}
+
+10. SHIPMENT_ARRANGED
+{
+  "@type": "shipmentArrangedEvent",
+  "id": "365e1d3c-eba2-46d1-8cfe-a184f660d844",
+  "type": "EVENT",
+  "name": "SHIPMENT_ARRANGED",
+  "timestamp": 1762783412.231363,
+  "correlationId": "b9a39166-a754-4294-b655-1f1947526896",
+  "payload": {
+    "@type": "shipmentArrangedPayload",
+    "orderId": "b9a39166-a754-4294-b655-1f1947526896",
+    "shipmentId": "e35c54a0-e1d1-44a9-a5a8-0dca8f6ff670",
+    "trackingNumber": "074MMT3UQ1OGYA0",
+    "carrier": "UPS"
+  }
+}
+
+11. SHIPMENT_CANCELLED
+{
+  "@type": "shipmentCancelledEvent",
+  "id": "d8d33ed7-0f58-425f-8e25-c7a7d1d5b459",
+  "type": "EVENT",
+  "name": "SHIPMENT_CANCELLED",
+  "timestamp": 1762784491.150958,
+  "correlationId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+  "payload": {
+    "@type": "shipmentCancelledPayload",
+    "orderId": "fc69ef0f-3c6c-4540-b6f0-deecc9bde60f",
+    "shipmentId": "7759dead-5bdd-40ec-a8eb-cfb0a0796983"
+  }
+}
