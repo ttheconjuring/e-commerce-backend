@@ -23,32 +23,35 @@ Services: `order-service`, `payment-service`, `product-service`, `shipment-servi
 3. Open terminal in the root folder and run: `./gradlew bootBuildImage`.
 4. Run: `docker compose up -d`.
 
-You now have all the services, the database and the Kafka brokers running.
+You now have all the services, the database and the Kafka brokers running. That means you are able to send a request and
+see how it works (look at `order-service` for more information).
 
 #### You can connect to the database by following the steps:
 
-1. Open browser and navigate to http://localhost:5050. 
+1. Open browser and navigate to http://localhost:5050.
 2. Use `example@email.com` and `password` to sign in.
-3. Register a server by right-clicking on "Servers". Set these values 
-    * General: 
-      * Name: `local_connection` (or something else)
+3. Register a server by right-clicking on "Servers". Set these values
+    * General:
+        * Name: `local_connection` (or something else)
     * Connection:
-      * Hot name/address: postgres_db
-      * Username: postgres
-      * Password: 12345
+        * Hot name/address: postgres_db
+        * Username: postgres
+        * Password: 12345
 4. Click "Save".
 
 #### You can connect a Kafka broker by following the steps:
+
 1. Open terminal and run: `docker exec -it broker-1 /bin/sh` (or any other broker you want)
 2. Run: `cd /opt/kafka/bin`
 3. You can run any kafka commands
 
 Note: For local development, you should uncomment the following lines in all `applications.properties` files:
-    
+
     spring.kafka.producer.bootstrap-servers=localhost:9092,localhost:9094,localhost:9096
     spring.kafka.consumer.bootstrap-servers=localhost:9092,localhost:9094,localhost:9096
 
-You should start your own database instance and kafka brokers (you see my [docker-network](https://github.com/ttheconjuring/docker-networks) repo for that).
+You should start your own database instance and kafka brokers (you see
+my [docker-network](https://github.com/ttheconjuring/docker-networks) repo for that).
 
 ---
 

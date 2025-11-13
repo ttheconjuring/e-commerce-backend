@@ -2,9 +2,12 @@
 
 ## 🎯 Purpose
 
-This service is the central **"safety net"** and observability tool for the entire microservice ecosystem. Its sole purpose is to **consume, log, and expose** any message that has failed processing in any of the other services.
+This service is the central **"safety net"** and observability tool for the entire microservice ecosystem. Its sole
+purpose is to **consume, log, and expose** any message that has failed processing in any of the other services.
 
-When a service (like `payment-service`) fails to process a command after all retries, the Kafka error handler routes the "poison pill" message to a **Dead-Letter Topic** (DLT), such as `payment-commands-topic.DLT`. This service listens to all DLTs.
+When a service (like `payment-service`) fails to process a command after all retries, the Kafka error handler routes
+the "poison pill" message to a **Dead-Letter Topic** (DLT), such as `payment-commands-topic.DLT`. This service listens
+to all DLTs.
 
 ## ⚙️ Responsibilities
 
@@ -44,11 +47,11 @@ This service is a **terminal consumer** and does not publish any messages.
 
 ### Running the Service
 
-1.  **Configure `application.properties`:**
+1. **Configure `application.properties`:**
     * Set the Spring Boot server port.
     * Configure the PostgreSQL database connection (for `DltMessage`).
     * Configure the Kafka broker connection.
-2.  **Run the application:**
-    ```bash
-    ./gradlew bootRun
-    ```
+2. **Run the application:**
+   ```bash
+   ./gradlew bootRun
+   ```

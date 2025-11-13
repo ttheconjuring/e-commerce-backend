@@ -2,14 +2,17 @@
 
 ## 🎯 Purpose
 
-This service is a "worker" responsible for a single business capability: **managing shipments**. It integrates with (or simulates) external shipping carriers.
+This service is a "worker" responsible for a single business capability: **managing shipments**. It integrates with (or
+simulates) external shipping carriers.
 
 ## ⚙️ Responsibilities
 
 * Owns the `Shipment` database table.
 * Listens for an `ArrangeShipmentCommand` to book a shipment with a carrier.
-* Listens for a `CancelShipmentCommand` (a compensating transaction) to roll back a shipment if the saga fails (e.g., payment failure).
-* Publishes the outcome (`ShipmentArrangedEvent`, `ArrangementFailedEvent`, `ShipmentCancelledEvent`) using the Transactional Outbox pattern.
+* Listens for a `CancelShipmentCommand` (a compensating transaction) to roll back a shipment if the saga fails (e.g.,
+  payment failure).
+* Publishes the outcome (`ShipmentArrangedEvent`, `ArrangementFailedEvent`, `ShipmentCancelledEvent`) using the
+  Transactional Outbox pattern.
 
 ## 📥 Kafka Consumers (Topics it Listens To)
 
@@ -36,11 +39,11 @@ This service has **no public API**. It is a purely event-driven backend componen
 
 ### Running the Service
 
-1.  **Configure `application.properties`:**
+1. **Configure `application.properties`:**
     * Set the Spring Boot server port.
     * Configure the PostgreSQL database connection (for `Shipment`, `OutboxEvent`).
     * Configure the Kafka broker connection.
-2.  **Run the application:**
-    ```bash
-    ./gradlew bootRun
-    ```
+2. **Run the application:**
+   ```bash
+   ./gradlew bootRun
+   ```

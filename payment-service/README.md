@@ -2,7 +2,8 @@
 
 ## 🎯 Purpose
 
-This service is a "worker" responsible for a single business capability: **processing payments**. It is a fully independent service that knows nothing about orders, products, or shipping—it only knows how to process a payment.
+This service is a "worker" responsible for a single business capability: **processing payments**. It is a fully
+independent service that knows nothing about orders, products, or shipping—it only knows how to process a payment.
 
 ## ⚙️ Responsibilities
 
@@ -36,11 +37,11 @@ This service has **no public API**. It is a purely event-driven backend componen
 
 ### Running the Service
 
-1.  **Configure `application.properties`:**
+1. **Configure `application.properties`:**
     * Set the Spring Boot server port.
     * Configure the PostgreSQL database connection (for `Payment`, `OutboxEvent`).
     * Configure the Kafka broker connection.
-2.  **Run the application:**
-    ```bash
-    ./gradlew bootRun
-    ```
+2. **Run the application:**
+   ```bash
+   ./gradlew bootRun
+   ```

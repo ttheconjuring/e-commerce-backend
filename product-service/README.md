@@ -2,14 +2,16 @@
 
 ## 🎯 Purpose
 
-This service is a "worker" responsible for a single business capability: **managing inventory**. It is the source of truth for product information and stock levels.
+This service is a "worker" responsible for a single business capability: **managing inventory**. It is the source of
+truth for product information and stock levels.
 
 ## ⚙️ Responsibilities
 
 * Owns the `Product` and `Category` database tables.
 * Listens for a `ConfirmAvailabilityCommand` and checks its local `Product` table for stock levels.
 * Listens for an `UpdateProductsCommand` to permanently decrement stock (the "commit" step after payment).
-* Publishes the outcome (`AvailabilityConfirmedEvent` or `ProductsShortageEvent`) using the Transactional Outbox pattern.
+* Publishes the outcome (`AvailabilityConfirmedEvent` or `ProductsShortageEvent`) using the Transactional Outbox
+  pattern.
 
 ## 📥 Kafka Consumers (Topics it Listens To)
 
@@ -25,7 +27,8 @@ This service publishes **Events** to the saga orchestrator:
 
 ## 🔌 API Endpoints
 
-This service has **no public API**. It is a purely event-driven backend component. (A `POST /seed` endpoint could be added for testing).
+This service has **no public API**. It is a purely event-driven backend component. (A `POST /seed` endpoint could be
+added for testing).
 
 ## 🚀 Getting Started
 
@@ -36,11 +39,11 @@ This service has **no public API**. It is a purely event-driven backend componen
 
 ### Running the Service
 
-1.  **Configure `application.properties`:**
+1. **Configure `application.properties`:**
     * Set the Spring Boot server port.
     * Configure the PostgreSQL database connection (for `Product`, `OutboxEvent`).
     * Configure the Kafka broker connection.
-2.  **Run the application:**
-    ```bash
-    ./gradlew bootRun
-    ```
+2. **Run the application:**
+   ```bash
+   ./gradlew bootRun
+   ```

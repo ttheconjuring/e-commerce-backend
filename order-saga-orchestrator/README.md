@@ -2,12 +2,14 @@
 
 ## 🎯 Purpose
 
-This service is the **central brain** of the entire distributed transaction (Saga). It does not contain any core business logic itself (like processing a payment or checking stock). Instead, its sole responsibility is to:
+This service is the **central brain** of the entire distributed transaction (Saga). It does not contain any core
+business logic itself (like processing a payment or checking stock). Instead, its sole responsibility is to:
 
-1.  **Listen** for events from all other microservices (e.g., `OrderCreated`, `PaymentSucceeded`, `ProductsShortage`).
-2.  **Maintain** the saga's state in the `OrderState` table.
-3.  **Decide** what should happen next based on the current state and the incoming event.
-4.  **Issue Commands** (e.g., `ProcessPaymentCommand`, `ConfirmAvailabilityCommand`) to other services to trigger the next step.
+1. **Listen** for events from all other microservices (e.g., `OrderCreated`, `PaymentSucceeded`, `ProductsShortage`).
+2. **Maintain** the saga's state in the `OrderState` table.
+3. **Decide** what should happen next based on the current state and the incoming event.
+4. **Issue Commands** (e.g., `ProcessPaymentCommand`, `ConfirmAvailabilityCommand`) to other services to trigger the
+   next step.
 
 This service implements the **Saga Orchestrator** pattern.
 
@@ -49,11 +51,11 @@ This service has **no public API**. It is a purely event-driven backend componen
 
 ### Running the Service
 
-1.  **Configure `application.properties`:**
+1. **Configure `application.properties`:**
     * Set the Spring Boot server port.
     * Configure the PostgreSQL database connection (for `OrderState`, `OutboxCommand`, etc.).
     * Configure the Kafka broker connection.
-2.  **Run the application:**
-    ```bash
-    ./gradlew bootRun
-    ```
+2. **Run the application:**
+   ```bash
+   ./gradlew bootRun
+   ```
