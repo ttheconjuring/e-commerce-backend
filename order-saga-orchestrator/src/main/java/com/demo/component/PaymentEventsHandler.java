@@ -20,14 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Listens for events from the Payment Service.
- * <p>
- * This component handles the outcomes of a payment request. A successful payment
- * moves the saga forward, while a failed payment typically triggers a compensating
- * transaction (rollback).<p>
- * All event handling is idempotent, ensured by the {@link ConsumedMessageService}.
- */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -38,16 +30,6 @@ public class PaymentEventsHandler {
     private final OutboxCommandService outboxCommandService;
     private final ConsumedMessageService consumedMessageService;
 
-    /**
-     * Handles the {@link PaymentSucceededEvent} (Happy Path).
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Records the successful payment details in the {@link OrderState}.</br>
-     * 3. Creates a new outbox command to trigger the next step.
-     *
-     * @param paymentSucceededEvent The event from the Payment Service.
-     */
     @Transactional
     @KafkaHandler
     public void handle(PaymentSucceededEvent paymentSucceededEvent) {
@@ -66,17 +48,6 @@ public class PaymentEventsHandler {
         this.outboxCommandService.create(updateProductsCommand);
     }
 
-    /**
-     * Handles the {@link PaymentFailedEvent} (Failure/Compensation Path).
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Records the payment failure details in the {@link OrderState}.</br>
-     * 3. Updates the saga status to reflect failure.</br>
-     * 4. Creates a compensating command to roll back any previous steps.
-     *
-     * @param paymentFailedEvent The event from the Payment Service.
-     */
     @Transactional
     @KafkaHandler
     public void handle(PaymentFailedEvent paymentFailedEvent) {

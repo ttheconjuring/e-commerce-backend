@@ -20,16 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Listens for events from the Product Service.
- * <p>
- * This component handles critical inventory-related events. It processes
- * confirmations of product availability, stock update completions, or
- * notifications of product shortages. Based on these events, it advances
- * the saga to the next step  or triggers a compensating rollback.
- * <p>
- * All event handling is idempotent, ensured by the {@link ConsumedMessageService}.
- */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -40,19 +30,6 @@ public class ProductEventsHandler {
     private final OutboxCommandService outboxCommandService;
     private final ConsumedMessageService consumedMessageService;
 
-    /**
-     * Handles the {@link AvailabilityConfirmedEvent} (Happy Path).
-     * <p>
-     * This is triggered when the Product service confirms that all items
-     * for the order are available and have been reserved.
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Updates the saga status to {@link Status#PENDING_SHIPMENT_ARRANGEMENT}.</br>
-     * 3. Creates an outbox command to trigger the Shipping Service.
-     *
-     * @param availabilityConfirmedEvent The event confirming product availability.
-     */
     @Transactional
     @KafkaHandler
     public void handle(AvailabilityConfirmedEvent availabilityConfirmedEvent) {
@@ -72,19 +49,6 @@ public class ProductEventsHandler {
         this.outboxCommandService.create(arrangeShipmentCommand);
     }
 
-    /**
-     * Handles the {@link ProductsUpdatedEvent}.
-     * <p>
-     * This event signifies that the product inventory has been
-     * successfully decremented.<p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Updates the saga status to {@link Status#PENDING_COMPLETION}.</br>
-     * 3. Creates a final outbox command to notify the Order service to
-     * mark the order as {@link Status#COMPLETED}.
-     *
-     * @param productsUpdatedEvent The event confirming stock has been updated.
-     */
     @Transactional
     @KafkaHandler
     public void handle(ProductsUpdatedEvent productsUpdatedEvent) {
@@ -100,20 +64,6 @@ public class ProductEventsHandler {
         this.outboxCommandService.create(completeOrderCommand);
     }
 
-    /**
-     * Handles the {@link ProductsShortageEvent} (Failure/Compensation Path).
-     * <p>
-     * This is triggered when the Product service reports that one or more
-     * items are unavailable or out of stock.
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Records the failure details (payload) using {@link OrderStateService#reflectProductsUnavailability}.</br>
-     * 3. Updates the saga status to {@link Status#PENDING_CANCELLATION} to initiate a rollback.</br>
-     * 4. Creates a compensating outbox command to cancel the order.
-     *
-     * @param productsShortageEvent The event detailing the item shortage.
-     */
     @Transactional
     @KafkaHandler
     public void handle(ProductsShortageEvent productsShortageEvent) {

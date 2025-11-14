@@ -2,71 +2,52 @@ package com.demo.component;
 
 import com.demo.common.command.shipment.ArrangeShipmentCommand;
 import com.demo.common.command.shipment.CancelShipmentCommand;
+import com.demo.common.constant.Topics;
 import com.demo.common.event.shipment.ArrangementFailedEvent;
 import com.demo.common.event.shipment.ShipmentArrangedEvent;
 import com.demo.common.event.shipment.ShipmentCancelledEvent;
+import com.demo.service.DltMessageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.annotation.KafkaHandler;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Defines the contract for a consumer that listens to the Dead-Letter Topics
- * (DLTs) related to the Shipment service.
- * <p>
- * This interface provides strongly-typed methods for each type of failed
- * shipment-related message. It allows the consumer to catch, deserialize,
- * and route any failed message to the {@link com.demo.service.DltMessageService}
- * for registration and later inspection.
- *
- * @see com.demo.component.impl.ShipmentDltHandlerImpl
- * @see com.demo.service.DltMessageService
- */
-public interface ShipmentDltHandler {
+@Component
+@RequiredArgsConstructor
+@KafkaListener(topics = {Topics.SHIPMENT_EVENTS_TOPIC_DLT, Topics.SHIPMENT_COMMANDS_TOPIC_DLT})
+public class ShipmentDltHandler {
 
-    // Event
+    private final DltMessageService dltMessageService;
 
-    /**
-     * Processes a failed {@link ArrangementFailedEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param arrangementFailedEvent The failed message.
-     */
-    void handleArrangementFailedEvent(ArrangementFailedEvent arrangementFailedEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleArrangementFailedEvent(ArrangementFailedEvent arrangementFailedEvent) {
+        this.dltMessageService.register(arrangementFailedEvent);
+    }
 
-    /**
-     * Processes a failed {@link ShipmentArrangedEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param shipmentArrangedEvent The failed message.
-     */
-    void handleShipmentArrangedEvent(ShipmentArrangedEvent shipmentArrangedEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleShipmentArrangedEvent(ShipmentArrangedEvent shipmentArrangedEvent) {
+        this.dltMessageService.register(shipmentArrangedEvent);
+    }
 
-    /**
-     * Processes a failed {@link ShipmentCancelledEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param shipmentCancelledEvent The failed message.
-     */
-    void handleShipmentCancelledEvent(ShipmentCancelledEvent shipmentCancelledEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleShipmentCancelledEvent(ShipmentCancelledEvent shipmentCancelledEvent) {
+        this.dltMessageService.register(shipmentCancelledEvent);
+    }
 
-    // Commands
+    @Transactional
+    @KafkaHandler
+    public void handleArrangeShipmentCommand(ArrangeShipmentCommand arrangeShipmentCommand) {
+        this.dltMessageService.register(arrangeShipmentCommand);
+    }
 
-    /**
-     * Processes a failed {@link ArrangeShipmentCommand} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>shipment-service</b>.
-     *
-     * @param arrangeShipmentCommand The failed message.
-     */
-    void handleArrangeShipmentCommand(ArrangeShipmentCommand arrangeShipmentCommand);
-
-    /**
-     * Processes a failed {@link CancelShipmentCommand} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>shipment-service</b>.
-     *
-     * @param cancelShipmentCommand The failed message.
-     */
-    void handleCancelShipmentCommand(CancelShipmentCommand cancelShipmentCommand);
+    @Transactional
+    @KafkaHandler
+    public void handleCancelShipmentCommand(CancelShipmentCommand cancelShipmentCommand) {
+        this.dltMessageService.register(cancelShipmentCommand);
+    }
 
 }

@@ -1,39 +1,42 @@
 package com.demo.service;
 
+import com.demo.model.ConsumedMessage;
+import com.demo.repository.ConsumedMessageRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Service interface for ensuring idempotent message processing.
- * <p>
- * In a distributed system, Kafka consumers (or any message consumer) may
- * receive the same message more than once. This service provides a mechanism
- * to track processed message IDs, allowing event handlers to safely check
- * if an event has already been handled, thus achieving "exactly-once" semantics
- * from a business logic perspective.
- */
-public interface ConsumedMessageService {
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ConsumedMessageService {
 
-    /**
-     * Checks if a message with the given ID has already been processed.
-     * <p>
-     * This method should be atomic. It checks for the existence
-     * of the ID and, if it doesn't exist, inserts it in a single transaction
-     * or atomic operation.
-     *
-     * @param id The unique identifier (UUID) of the incoming event/message.
-     * @return {@code true} if the ID has been seen before (it's a duplicate),
-     * {@code false} if this is the first time seeing this ID.
-     */
-    boolean isDuplicate(UUID id);
+    private final ConsumedMessageRepository consumedMessageRepository;
 
-    /**
-     * A housekeeping method to periodically clean up old message IDs.
-     * <p>
-     * To prevent the consumed messages table/store from growing indefinitely,
-     * this method can be called by a scheduler to delete records older than
-     * a certain time (e.g., older than 30 days).
-     */
-    void cleanUp();
+    @Transactional
+    public boolean isDuplicate(UUID id) {
+        try {
+            // Attempt to save the new message ID.
+            this.consumedMessageRepository.saveAndFlush(new ConsumedMessage(id, Instant.now()));
+            // No exception = new message
+            return false;
+        } catch (DataIntegrityViolationException e) {
+            // Exception = primary key violation = duplicate
+            log.warn("---> Skipping duplicate message: {} <---", id);
+            return true;
+        }
+    }
+
+    @Scheduled(fixedRate = 240000) // 4 min
+    // @Scheduled(cron = "0 0 3 * * 0") // 03:00 Every Sunday
+    public void cleanUp() {
+        this.consumedMessageRepository.deleteAll();
+    }
 
 }
-

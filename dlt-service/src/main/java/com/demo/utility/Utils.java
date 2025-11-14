@@ -3,34 +3,10 @@ package com.demo.utility;
 import com.demo.model.DltMessage;
 import com.demo.model.DltMessageDTO;
 
-/**
- * A static utility class providing helper methods for the DLT service.
- * <p>
- * This class includes mappers for converting entities to DTOs and
- * logic for generating human-readable error descriptions.
- */
 public class Utils {
 
-    /**
-     * Private constructor to prevent instantiation of this utility class.
-     */
     private Utils() {}
 
-    /**
-     * Generates a human-readable description of a processing failure.
-     * <p>
-     * This method acts as a central registry, mapping a failed message's
-     * class name (e.g., "OrderCreatedEvent") to the name of the microservice
-     * that was *supposed* to consume it (e.g., "order-saga-orchestrator").
-     * <p>
-     * The output is a clear, concise summary of the failure, such as:
-     * "ORDER-SAGA-ORCHESTRATOR couldn't process ORDER_CREATED."
-     * This is invaluable for quickly diagnosing problems from the DLT.
-     *
-     * @param messageName The {@link Class#getSimpleName()} of the failed message.
-     * @return A formatted, human-readable error description.
-     * @throws IllegalArgumentException if the messageName is not recognized.
-     */
     public static String determineDescription(String messageName) {
         String result = "%s couldn't process %s.";
         String eventOrCommandName;
@@ -126,19 +102,6 @@ public class Utils {
         return String.format(result, serviceName.toUpperCase(), eventOrCommandName);
     }
 
-    /**
-     * Converts a {@link DltMessage} entity to a {@link DltMessageDTO}.
-     * <p>
-     * This method maps the core fields from the database entity to a
-     * Data Transfer Object (DTO) suitable for sending over the API.
-     * It's used to build the list for the {@link com.demo.controller.ErrorController}.
-     * <p>
-     * (Note: There is a typo in the method name, "covertToDto".
-     * It should ideally be "convertToDto".)
-     *
-     * @param dltMessage The persisted {@link DltMessage} entity from the database.
-     * @return A new {@link DltMessageDTO} object.
-     */
     public static DltMessageDTO covertToDto(DltMessage dltMessage) {
         DltMessageDTO dto = new DltMessageDTO();
         dto.setId(dltMessage.getId());

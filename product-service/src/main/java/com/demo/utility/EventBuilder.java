@@ -15,33 +15,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * A static utility class for building {@link Event} objects related to product
- * and inventory outcomes.
- * <p>
- * This class abstracts the logic of creating and populating event payloads,
- * keeping the {@link com.demo.component.ProductCommandsHandler} clean and
- * focused on orchestration logic. Each method corresponds to a specific
- * inventory-related event.
- */
 public class EventBuilder {
 
-    /**
-     * Private constructor to prevent instantiation of this utility class.
-     */
-    private EventBuilder() {}
+    private EventBuilder() {
+        throw new AssertionError("EventBuilder class should not be instantiated.");
+    }
 
-    /**
-     * Builds an {@link Events#AVAILABILITY_CONFIRMED} event (Happy Path).
-     * <p>
-     * This event is created when the {@link com.demo.service.ProductService}
-     * confirms that all requested products are in stock. It notifies the
-     * saga orchestrator that it can proceed to the next step (e.g., arranging
-     * shipment or processing payment).
-     *
-     * @param correlationId The saga's correlation ID (the Order ID).
-     * @return A fully populated {@link AvailabilityConfirmedEvent}.
-     */
     public static Event availabilityConfirmedEvent(UUID correlationId) {
         Event availabilityConfirmedEvent = new AvailabilityConfirmedEvent();
         availabilityConfirmedEvent.setId(UUID.randomUUID());
@@ -53,16 +32,6 @@ public class EventBuilder {
         return availabilityConfirmedEvent;
     }
 
-    /**
-     * Builds an {@link Events#PRODUCTS_UPDATED} event.
-     * <p>
-     * This event is created as an acknowledgment after the
-     * {@code UpdateProductsCommand} has been successfully processed
-     * (i.e., stock has been permanently decremented).
-     *
-     * @param correlationId The saga's correlation ID (the Order ID).
-     * @return A fully populated {@link ProductsUpdatedEvent}.
-     */
     public static Event productsUpdatedEvent(UUID correlationId) {
         Event productsUpdatedEvent = new ProductsUpdatedEvent();
         productsUpdatedEvent.setId(UUID.randomUUID());
@@ -74,19 +43,6 @@ public class EventBuilder {
         return productsUpdatedEvent;
     }
 
-    /**
-     * Builds an {@link Events#PRODUCTS_SHORTAGE} event (Failure Path).
-     * <p>
-     * This event is created when the {@link com.demo.service.ProductService}
-     * determines that one or more products are unavailable in the requested
-     * quantity. It notifies the saga orchestrator of the failure, which
-     * will trigger compensating actions (e.g., cancelling the order).
-     *
-     * @param correlationId        The saga's correlation ID (the Order ID).
-     * @param insufficientProducts A list of DTOs detailing which products
-     * are out of stock.
-     * @return A fully populated {@link ProductsShortageEvent}.
-     */
     public static Event productsShortageEvent(UUID correlationId, List<InsufficientProductDTO> insufficientProducts) {
         Event productsShortageEvent = new ProductsShortageEvent();
         productsShortageEvent.setId(UUID.randomUUID());
@@ -102,17 +58,6 @@ public class EventBuilder {
         return productsShortageEvent;
     }
 
-    /**
-     * Private helper method to build a human-readable string
-     * detailing the product shortages.
-     * <p>
-     * This string is intended for the {@link ProductsShortagePayload}
-     * to provide a clear, log-friendly reason for the failure.
-     *
-     * @param insufficientProducts The list of products that are out of stock.
-     * @return A formatted string (e.g., "The requested quantity exceeds...
-     * 1. [Product ID] (requested: 10, available: 5)").
-     */
     private static String buildReason(List<InsufficientProductDTO> insufficientProducts) {
         int insufficientProductsCount = insufficientProducts.size();
         StringBuilder sb = new StringBuilder();

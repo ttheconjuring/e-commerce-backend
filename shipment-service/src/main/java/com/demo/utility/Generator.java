@@ -4,7 +4,9 @@ import java.util.Random;
 
 public class Generator {
 
-    private Generator() {}
+    private Generator() {
+        throw new IllegalStateException("Utility class should not be instantiated");
+    }
 
     private static final String[] failureReasons = {
             "Reason: The shipping address is incomplete or malformed (code: invalid_address)",

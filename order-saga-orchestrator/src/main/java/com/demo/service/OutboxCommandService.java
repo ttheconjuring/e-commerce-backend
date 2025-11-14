@@ -1,49 +1,65 @@
 package com.demo.service;
 
 import com.demo.common.command.Command;
+import com.demo.common.command.order.CancelOrderCommand;
+import com.demo.common.command.order.CompleteOrderCommand;
+import com.demo.common.command.payment.ProcessPaymentCommand;
+import com.demo.common.command.product.ConfirmAvailabilityCommand;
+import com.demo.common.command.product.UpdateProductsCommand;
+import com.demo.common.constant.Topics;
 import com.demo.model.OutboxCommand;
 import com.demo.model.Status;
+import com.demo.repository.OutboxCommandRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service interface for managing the Transactional Outbox.
- * <p>
- * This service is responsible for persisting commands (messages to be published)
- * into the database as part of an atomic transaction along with business state
- * changes (e.g., updating {@link com.demo.model.OrderState}).
- * <p>
- * A separate component (e.g., {@link com.demo.component.OutboxPoller})
- * is expected to read these commands, publish them to a message broker (Kafka),
- * and then update or delete them.
- */
-public interface OutboxCommandService {
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OutboxCommandService {
 
-    /**
-     * Creates and saves a new command to the outbox table.
-     * <p>
-     * This method is called by event handlers within the same transaction as the {@link OrderStateService} calls.
-     *
-     * @param command The command object to be saved.
-     */
-    void create(Command command);
+    private final OutboxCommandRepository outboxCommandRepository;
 
-    /**
-     * Performs a bulk deletion of commands that have already been
-     * successfully published (marked with {@link Status#PUBLISHED}).
-     * <p>
-     * This is a cleanup task, run periodically.
-     */
-    void deletePublished();
+    @Transactional
+    public void create(Command command) {
+        OutboxCommand outboxCommand = new OutboxCommand();
+        // 1. Copy common command properties
+        outboxCommand.setId(command.getId());
+        outboxCommand.setName(command.getName());
+        outboxCommand.setCorrelationId(command.getCorrelationId());
+        outboxCommand.setCommand(command); // The full JSON payload
+        outboxCommand.setTimestamp(command.getTimestamp());
+        outboxCommand.setStatus(Status.PENDING_PUBLISHING);
+        // 2. Perform Topic Routing based on command type
+        if (command instanceof CancelOrderCommand ||
+                command instanceof CompleteOrderCommand) {
+            outboxCommand.setTopic(Topics.ORDER_COMMANDS_TOPIC);
+        } else if (command instanceof ProcessPaymentCommand) {
+            outboxCommand.setTopic(Topics.PAYMENT_COMMANDS_TOPIC);
+        } else if (command instanceof ConfirmAvailabilityCommand ||
+                command instanceof UpdateProductsCommand) {
+            outboxCommand.setTopic(Topics.PRODUCT_COMMANDS_TOPIC);
+        } else {
+            outboxCommand.setTopic(Topics.SHIPMENT_COMMANDS_TOPIC);
+        }
+        // 3. Save to database atomically
+        this.outboxCommandRepository.saveAndFlush(outboxCommand);
+    }
 
-    /**
-     * Updates an existing outbox command.
-     * <p>
-     * This is typically used by the poller component to mark a command's
-     * status (e.g., from {@link Status#PENDING_PUBLISHING} to {@link Status#PUBLISHED})
-     * after it has been successfully sent to the message broker.
-     *
-     * @param outboxCommand The command entity to update.
-     * @param newStatus     The new status to set.
-     */
-    void update(OutboxCommand outboxCommand, Status newStatus);
+    @Transactional
+    @Scheduled(fixedRate = 120000) // 2 min
+    // @Scheduled(cron = "0 0 3 * * 0") // 03:00 Every Sunday
+    public void deletePublished() {
+        this.outboxCommandRepository.deleteAll(this.outboxCommandRepository.findByStatus(Status.PUBLISHED));
+    }
+
+    @Transactional
+    public void update(OutboxCommand outboxCommand, Status newStatus) {
+        outboxCommand.setStatus(newStatus);
+        this.outboxCommandRepository.saveAndFlush(outboxCommand);
+    }
 
 }

@@ -20,18 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Listens for events from the Shipping Service.
- * <p>
- * This component handles the outcome of the shipment arrangement step.
- * Based on this saga's design, a successful shipment arrangement
- * is the trigger to proceed with customer payment.
- * <p>
- * A failure at this stage (either arrangement failure or cancellation)
- * will trigger a compensating rollback for the entire saga.
- * <p>
- * All event handling is idempotent, ensured by the {@link ConsumedMessageService}.
- */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -42,20 +30,6 @@ public class ShippingEventsHandler {
     private final OutboxCommandService outboxCommandService;
     private final ConsumedMessageService consumedMessageService;
 
-    /**
-     * Handles the {@link ShipmentArrangedEvent} (Happy Path).
-     * <p>
-     * This event signifies that the Shipping Service has successfully
-     * reserved a courier and the order is ready to be paid for.
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Records the shipment details in the {@link OrderState}.</br>
-     * 3. Updates the saga status to {@link Status#PENDING_PAYMENT}.</br>
-     * 4. Creates a new outbox command to trigger the Payment Service.
-     *
-     * @param shipmentArrangedEvent The event from the Shipping Service.
-     */
     @Transactional
     @KafkaHandler
     public void handle(ShipmentArrangedEvent shipmentArrangedEvent) {
@@ -76,18 +50,6 @@ public class ShippingEventsHandler {
         this.outboxCommandService.create(processPaymentCommand);
     }
 
-    /**
-     * Handles the {@link ArrangementFailedEvent} (Failure Path).
-     * <p>
-     * Triggered if the Shipping Service fails to arrange a shipment.<p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Records the failure details in the {@link OrderState}.</br>
-     * 3. Updates the saga status to {@link Status#PENDING_CANCELLATION} to initiate a rollback.</br>
-     * 4. Creates a compensating outbox command to cancel the order.
-     *
-     * @param arrangementFailedEvent The event detailing the arrangement failure.
-     */
     @Transactional
     @KafkaHandler
     public void handle(ArrangementFailedEvent arrangementFailedEvent) {
@@ -108,19 +70,6 @@ public class ShippingEventsHandler {
         this.outboxCommandService.create(cancelOrderCommand);
     }
 
-    /**
-     * Handles the {@link ShipmentCancelledEvent} (Compensation Path).
-     * <p>
-     * This event confirms that a previously arranged shipment has been successfully
-     * cancelled. It is received as part of a larger compensating transaction.
-     * <p>
-     * This method:</br>
-     * 1. Checks for message duplication.</br>
-     * 2. Updates the saga status to {@link Status#PENDING_CANCELLATION}.</br>
-     * 3. Creates a final outbox command to cancel the Order itself.
-     *
-     * @param shipmentCancelledEvent The event confirming the shipment rollback.
-     */
     @Transactional
     @KafkaHandler
     public void handle(ShipmentCancelledEvent shipmentCancelledEvent) {

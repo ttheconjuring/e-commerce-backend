@@ -2,71 +2,52 @@ package com.demo.component;
 
 import com.demo.common.command.order.CancelOrderCommand;
 import com.demo.common.command.order.CompleteOrderCommand;
+import com.demo.common.constant.Topics;
 import com.demo.common.event.order.OrderCancelledEvent;
 import com.demo.common.event.order.OrderCompletedEvent;
 import com.demo.common.event.order.OrderCreatedEvent;
+import com.demo.service.DltMessageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.annotation.KafkaHandler;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Defines the contract for a consumer that listens to the Dead-Letter Topics
- * (DLTs) related to the Order and Saga Orchestrator services.
- * <p>
- * Its purpose is to provide a strongly-typed method for each type of
- * failed message. This allows the consumer to catch, deserialize, and route
- * any failed message to the {@link com.demo.service.DltMessageService}
- * for registration and later inspection.
- *
- * @see com.demo.component.impl.OrderDltHandlerImpl
- * @see com.demo.service.DltMessageService
- */
-public interface OrderDltHandler {
+@Component
+@RequiredArgsConstructor
+@KafkaListener(topics = {Topics.ORDER_EVENTS_TOPIC_DLT, Topics.ORDER_COMMANDS_TOPIC_DLT})
+public class OrderDltHandler {
 
-    // Events
+    private final DltMessageService dltMessageService;
 
-    /**
-     * Processes a failed {@link OrderCreatedEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param orderCreatedEvent The failed message.
-     */
-    void handleOrderCreatedEvent(OrderCreatedEvent orderCreatedEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleOrderCreatedEvent(OrderCreatedEvent orderCreatedEvent) {
+        this.dltMessageService.register(orderCreatedEvent);
+    }
 
-    /**
-     * Processes a failed {@link OrderCompletedEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param orderCompletedEvent The failed message.
-     */
-    void handleOrderCompletedEvent(OrderCompletedEvent orderCompletedEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleOrderCompletedEvent(OrderCompletedEvent orderCompletedEvent) {
+       this.dltMessageService.register(orderCompletedEvent);
+    }
 
-    /**
-     * Processes a failed {@link OrderCancelledEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param orderCancelledEvent The failed message.
-     */
-    void handleOrderCancelledEvent(OrderCancelledEvent orderCancelledEvent);
+    @Transactional
+    @KafkaHandler
+    public void handleOrderCancelledEvent(OrderCancelledEvent orderCancelledEvent) {
+       this.dltMessageService.register(orderCancelledEvent);
+    }
 
-    // Commands
+    @Transactional
+    @KafkaHandler
+    public void handleCancelOrderCommand(CancelOrderCommand cancelOrderCommand) {
+        this.dltMessageService.register(cancelOrderCommand);
+    }
 
-    /**
-     * Processes a failed {@link CancelOrderCommand} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-service</b>.
-     *
-     * @param cancelOrderCommand The failed message.
-     */
-    void handleCancelOrderCommand(CancelOrderCommand cancelOrderCommand);
-
-    /**
-     * Processes a failed {@link CompleteOrderCommand} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-service</b>.
-     *
-     * @param completeOrderCommand The failed message.
-     */
-    void handleCompleteOrderCommand(CompleteOrderCommand completeOrderCommand);
+    @Transactional
+    @KafkaHandler
+    public void handleCompleteOrderCommand(CompleteOrderCommand completeOrderCommand) {
+        this.dltMessageService.register(completeOrderCommand);
+    }
 
 }

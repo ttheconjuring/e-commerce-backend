@@ -17,33 +17,9 @@ import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Map;
 
-/**
- * Central Kafka configuration for the Payment Service.
- * <p>
- * This class defines beans for:
- * 1. Robust listener error handling (Retry + DLT).
- * 2. The listener container factory to apply the error handler.
- * 3. Automatic topic creation ({@link NewTopic}) for payment topics.
- */
 @Configuration
 public class KafkaConfig {
 
-    /**
-     * Configures the main error handler for all Kafka listeners.
-     * <p>
-     * This setup implements a retry mechanism with a Dead-Letter Topic (DLT) strategy.</br>
-     * 1. **Retries:** It will retry a failing message 3 times, with a fixed</br>
-     * 5-second (5000ms) delay between each attempt. </br>
-     * 2. **DLT:** After all retries are exhausted, the {@link DeadLetterPublishingRecoverer}
-     * will automatically publish the problematic message to a DLT.</br>
-     * 3. **Exceptions:** By default, all exceptions are considered retryable.
-     * {@code errorHandler.addNotRetryableExceptions()} is used to specify
-     * fatal exceptions that should *not* be retried (and go straight to DLT).
-     *
-     * @param kafkaTemplate The {@link KafkaTemplate} used by the recoverer to
-     * publish the poison pill message to the DLT.
-     * @return A fully configured {@link DefaultErrorHandler}.
-     */
     @Bean
     public DefaultErrorHandler errorHandler (KafkaTemplate<String, Message> kafkaTemplate) {
         DeadLetterPublishingRecoverer deadLetterPublishingRecoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
@@ -54,17 +30,6 @@ public class KafkaConfig {
         return errorHandler;
     }
 
-    /**
-     * Configures the container factory for all {@link org.springframework.kafka.annotation.KafkaListener}
-     * annotations.
-     * <p>
-     * This bean wires the custom {@link DefaultErrorHandler} (defined above)
-     * into every listener in this application.
-     *
-     * @param consumerFactory The default Spring Boot consumer factory.
-     * @param errorHandler    The custom, DLT-enabled error handler bean.
-     * @return A configured {@link ConcurrentKafkaListenerContainerFactory}.
-     */
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Message>> kafkaListenerContainerFactory(
             ConsumerFactory<String, Message> consumerFactory, DefaultErrorHandler errorHandler) {
@@ -74,23 +39,6 @@ public class KafkaConfig {
         return factory;
     }
 
-    /**
-     * Defines and configures the {@link Topics#PAYMENT_COMMANDS_TOPIC}.
-     * <p>
-     * This {@link Bean} will cause Spring to automatically create the topic
-     * on the broker if it doesn't already exist.
-     * <p>
-     * Configuration:
-     * <ul>
-     * <li><b>Partitions:</b> 2 - Allows for concurrent consumption.</li>
-     * <li><b>Replicas:</b> 3 - Standard for a production-ready, fault-tolerant setup.</li>
-     * <li><b>Min In-Sync Replicas:</b> 2 - Guarantees that a message is written to at
-     * least 2 replicas before being acknowledged. This prevents data loss
-     * if the leader partition fails.</li>
-     * </ul>
-     *
-     * @return A {@link NewTopic} definition.
-     */
     @Bean
     public NewTopic paymentCommandsTopic() {
         return TopicBuilder
@@ -101,23 +49,6 @@ public class KafkaConfig {
                 .build();
     }
 
-    /**
-     * Defines and configures the {@link Topics#PAYMENT_EVENTS_TOPIC}.
-     * <p>
-     * This {@link Bean} will cause Spring to automatically create the topic
-     * on the broker if it doesn't already exist.
-     * <p>
-     * Configuration:
-     * <ul>
-     * <li><b>Partitions:</b> 2 - Allows for concurrent consumption.</li>
-     * <li><b>Replicas:</b> 3 - Standard for a production-ready, fault-tolerant setup.</li>
-     * <li><b>Min In-Sync Replicas:</b> 2 - Guarantees that a message is written to at
-     * least 2 replicas before being acknowledged. This prevents data loss
-     * if the leader partition fails.</li>
-     * </ul>
-     *
-     * @return A {@link NewTopic} definition.
-     */
     @Bean
     public NewTopic paymentEventsTopic() {
         return TopicBuilder

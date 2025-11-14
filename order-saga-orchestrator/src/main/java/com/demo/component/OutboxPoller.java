@@ -14,21 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Implements the "Polling Publisher" part of the Transactional Outbox pattern.
- * <p>
- * This component periodically scans the outbox table for commands that are
- * pending publication ({@link Status#PENDING_PUBLISHING}). It then attempts
- * to publish each command to the message broker (Kafka) using the
- * {@link PublisherService}.
- * <p>
- * The publishing is done asynchronously. Based on the outcome, it updates
- * the command's status to {@link Status#PUBLISHED} on success or
- * {@link Status#PUBLISHING_FAILED} on failure.
- *
- * @see com.demo.service.OutboxCommandService
- * @see com.demo.service.PublisherService
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -38,13 +23,6 @@ public class OutboxPoller {
     private final OutboxCommandRepository outboxCommandRepository;
     private final PublisherService publisherService;
 
-    /**
-     * A scheduled task that runs at a fixed delay to process pending outbox commands.
-     * <p>
-     * It fetches all commands marked as {@link Status#PENDING_PUBLISHING},
-     * attempts to publish them, and updates their status based on the
-     * asynchronous publishing result.
-     */
     @Scheduled(fixedDelay = 10000) // 10 sec
     public void pollOutbox() {
         List<OutboxCommand> outboxCommands = this.outboxCommandRepository.findByStatus(Status.PENDING_PUBLISHING);

@@ -1,52 +1,40 @@
 package com.demo.component;
 
 import com.demo.common.command.payment.ProcessPaymentCommand;
+import com.demo.common.constant.Topics;
 import com.demo.common.event.payment.PaymentFailedEvent;
 import com.demo.common.event.payment.PaymentSucceededEvent;
+import com.demo.service.DltMessageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.annotation.KafkaHandler;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Defines the contract for a consumer that listens to the Dead-Letter Topics
- * (DLTs) related to the Payment service.
- * <p>
- * This interface provides strongly-typed methods for each type of failed
- * payment-related message. It allows the consumer to catch, deserialize,
- * and route any failed message to the {@link com.demo.service.DltMessageService}
- * for registration and later inspection.
- *
- * @see com.demo.component.impl.PaymentDltHandlerImpl
- * @see com.demo.service.DltMessageService
- */
-public interface PaymentDltHandler {
+@Component
+@RequiredArgsConstructor
+@KafkaListener(topics = {Topics.PAYMENT_EVENTS_TOPIC_DLT, Topics.PAYMENT_COMMANDS_TOPIC_DLT})
+public class PaymentDltHandler {
 
-    // Events
+    private final DltMessageService dltMessageService;
 
-    /**
-     * Processes a failed {@link PaymentFailedEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param paymentFailedEvent The failed message.
-     */
-    void handlePaymentFailedEvent(PaymentFailedEvent paymentFailedEvent);
+    @Transactional
+    @KafkaHandler
+    public void handlePaymentFailedEvent(PaymentFailedEvent paymentFailedEvent) {
+        this.dltMessageService.register(paymentFailedEvent);
+    }
 
-    /**
-     * Processes a failed {@link PaymentSucceededEvent} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>order-saga-orchestrator</b>.
-     *
-     * @param paymentSucceededEvent The failed message.
-     */
-    void handlePaymentSucceededEvent(PaymentSucceededEvent paymentSucceededEvent);
 
-    // Commands
+    @Transactional
+    @KafkaHandler
+    public void handlePaymentSucceededEvent(PaymentSucceededEvent paymentSucceededEvent) {
+       this.dltMessageService.register(paymentSucceededEvent);
+    }
 
-    /**
-     * Processes a failed {@link ProcessPaymentCommand} that has been routed to the DLT.
-     * <p>
-     * This message failed consumption by the <b>payment-service</b>.
-     *
-     * @param processPaymentCommand The failed message.
-     */
-    void handleProcessPaymentCommand(ProcessPaymentCommand processPaymentCommand);
+    @Transactional
+    @KafkaHandler
+    public void handleProcessPaymentCommand(ProcessPaymentCommand processPaymentCommand) {
+        this.dltMessageService.register(processPaymentCommand);
+    }
 
 }

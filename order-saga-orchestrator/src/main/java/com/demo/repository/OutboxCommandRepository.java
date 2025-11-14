@@ -10,7 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface OutboxCommandRepository extends JpaRepository<OutboxCommand, UUID> {
-
     List<OutboxCommand> findByStatus(Status status);
-
 }

@@ -29,33 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * A static utility class for building {@link Command} objects.
- * <p>
- * This class abstracts the complex logic of creating and populating
- * command payloads, keeping the event handlers clean and focused
- * on orchestration logic.
- *
- * @see com.demo.component.OrderEventsHandler
- * @see com.demo.component.PaymentEventsHandler
- * @see com.demo.component.ProductEventsHandler
- * @see com.demo.component.ShippingEventsHandler
- */
 public class CommandBuilder {
 
-    /**
-     * Private constructor to prevent instantiation of this utility class.
-     */
-    private CommandBuilder() {}
+    private CommandBuilder() {
+        throw new IllegalStateException("Utility class should not be instantiated");
+    }
 
-    /**
-     * Builds a {@link Commands#CANCEL_ORDER} command.
-     * This is a compensating command.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @param reason        A human-readable reason for the cancellation.
-     * @return A fully populated {@link CancelOrderCommand}.
-     */
     public static Command cancelOrderCommand(UUID correlationId, String reason) {
         Command cancelOrderCommand = new CancelOrderCommand();
         cancelOrderCommand.setId(UUID.randomUUID());
@@ -70,12 +49,6 @@ public class CommandBuilder {
         return cancelOrderCommand;
     }
 
-    /**
-     * Builds a {@link Commands#CONFIRM_AVAILABILITY} command for the Product Service.
-     *
-     * @param orderCreatedEvent The event that initiated the saga, containing product info.
-     * @return A fully populated {@link ConfirmAvailabilityCommand}.
-     */
     public static Command confirmAvailabilityCommand(OrderCreatedEvent orderCreatedEvent) {
         UUID correlationId = orderCreatedEvent.getCorrelationId();
         OrderCreatedPayload orderCreatedPayload = (OrderCreatedPayload) orderCreatedEvent.getPayload();
@@ -93,14 +66,6 @@ public class CommandBuilder {
         return confirmAvailabilityCommand;
     }
 
-    /**
-     * Builds an {@link Commands#UPDATE_PRODUCTS} command for the Product Service.
-     * This command instructs the service to decrement stock.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @param orderState    The current order state, containing the original product list.
-     * @return A fully populated {@link UpdateProductsCommand}.
-     */
     public static Command updateProductsCommand(UUID correlationId, OrderState orderState) {
         Command updateProductsCommand = new UpdateProductsCommand();
         updateProductsCommand.setId(UUID.randomUUID());
@@ -117,13 +82,6 @@ public class CommandBuilder {
         return updateProductsCommand;
     }
 
-    /**
-     * Builds a {@link Commands#COMPLETE_ORDER} command for the Order Service.
-     * This is a terminal command for a successful saga.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @return A fully populated {@link CompleteOrderCommand}.
-     */
     public static Command completeOrderCommand(UUID correlationId) {
         Command completeOrderCommand = new CompleteOrderCommand();
         completeOrderCommand.setId(UUID.randomUUID());
@@ -135,13 +93,6 @@ public class CommandBuilder {
         return completeOrderCommand;
     }
 
-    /**
-     * Builds a {@link Commands#PROCESS_PAYMENT} command for the Payment Service.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @param orderState    The current order state, containing payment info.
-     * @return A fully populated {@link ProcessPaymentCommand}.
-     */
     public static Command processPaymentCommand(UUID correlationId, OrderState orderState) {
         OrderCreatedPayload orderCreatedPayload = (OrderCreatedPayload) orderState.getOrderCreatedPayload();
         Command processPaymentCommand = new ProcessPaymentCommand();
@@ -159,13 +110,6 @@ public class CommandBuilder {
         return processPaymentCommand;
     }
 
-    /**
-     * Builds an {@link Commands#ARRANGE_SHIPMENT} command for the Shipping Service.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @param orderState    The current order state, containing shipping address and products.
-     * @return A fully populated {@link ArrangeShipmentCommand}.
-     */
     public static Command arrangeShipmentCommand(UUID correlationId, OrderState orderState) {
         OrderCreatedPayload orderCreatedPayload = (OrderCreatedPayload) orderState.getOrderCreatedPayload();
         List<ProductQuantityDTO> products = CommandBuilder.convertToProductQuantityList(orderCreatedPayload.getProducts());
@@ -184,15 +128,6 @@ public class CommandBuilder {
         return arrangeShipmentCommand;
     }
 
-    /**
-     * Builds a {@link Commands#CANCEL_SHIPMENT} command.
-     * This is a compensating command, triggered by a payment failure.
-     *
-     * @param correlationId The saga's correlation ID.
-     * @param orderState    The current order state, containing the ID of the shipment to cancel.
-     * @param reason        The reason for the cancellation (e.g., payment failure).
-     * @return A fully populated {@link CancelShipmentCommand}.
-     */
     public static Command cancelShipmentCommand(UUID correlationId, OrderState orderState, String reason) {
         Command cancelShipmentCommand = new CancelShipmentCommand();
         cancelShipmentCommand.setId(UUID.randomUUID());
@@ -209,13 +144,6 @@ public class CommandBuilder {
         return cancelShipmentCommand;
     }
 
-    /**
-     * Private helper method to transform a list of {@link OrderProductDTO}
-     * into a list of {@link ProductQuantityDTO}.
-     *
-     * @param orderProductDTOs The list of products from the original order.
-     * @return A new list in the format expected by other services.
-     */
     private static List<ProductQuantityDTO> convertToProductQuantityList(List<OrderProductDTO> orderProductDTOs) {
         List<ProductQuantityDTO> productsToCheck = new ArrayList<>();
         for (OrderProductDTO orderProductDTO : orderProductDTOs) {

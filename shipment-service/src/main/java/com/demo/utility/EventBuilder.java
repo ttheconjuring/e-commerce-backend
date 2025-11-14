@@ -16,7 +16,9 @@ import java.util.UUID;
 
 public class EventBuilder {
 
-    private EventBuilder(){}
+    private EventBuilder() {
+        throw new AssertionError("EventBuilder class should not be instantiated.");
+    }
 
     public static Event shipmentArrangedEvent(UUID correlationId, Shipment shipment) {
         Event shipmentArrangedEvent = new ShipmentArrangedEvent();

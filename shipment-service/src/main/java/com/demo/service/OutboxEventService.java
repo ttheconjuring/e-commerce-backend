@@ -1,49 +1,50 @@
 package com.demo.service;
 
+import com.demo.common.constant.Topics;
 import com.demo.common.event.Event;
 import com.demo.model.OutboxEvent;
 import com.demo.model.Status;
+import com.demo.repository.OutboxEventRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service interface for managing the Transactional Outbox.
- * <p>
- * This service is responsible for persisting events (messages to be published)
- * into the database as part of an atomic transaction along with business state
- * changes.
- * <p>
- * A separate component (e.g., {@link com.demo.component.OutboxPoller})
- * is expected to read these events, publish them to a message broker (Kafka),
- * and then update or delete them.
- */
-public interface OutboxEventService {
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OutboxEventService {
 
-    /**
-     * Creates and saves a new event to the outbox table.
-     * <p>
-     * This method is called by event handlers within the same transaction as the {@link ShipmentService} calls.
-     *
-     * @param event The event object to be saved.
-     */
-    void create(Event event);
+    private final OutboxEventRepository outboxEventRepository;
 
-    /**
-     * Performs a bulk deletion of events that have already been
-     * successfully published (marked with {@link Status#PUBLISHED}).
-     * <p>
-     * This is a cleanup task, run periodically.
-     */
-    void deletePublished();
+    @Transactional
+    public void create(Event event) {
+        OutboxEvent outboxEvent = new OutboxEvent();
+        // 1. Copy common event properties
+        outboxEvent.setId(event.getId());
+        outboxEvent.setName(event.getName());
+        // 2. Set the destination topic (all events go to the same topic)
+        outboxEvent.setTopic(Topics.SHIPMENT_EVENTS_TOPIC);
+        outboxEvent.setCorrelationId(event.getCorrelationId());
+        outboxEvent.setEvent(event);
+        outboxEvent.setTimestamp(event.getTimestamp());
+        outboxEvent.setStatus(Status.PENDING_PUBLISHING);
+        // 3. Save to database atomically
+        this.outboxEventRepository.saveAndFlush(outboxEvent);
+    }
 
-    /**
-     * Updates an existing outbox event.
-     * <p>
-     * This is typically used by the poller component to mark a event's
-     * status (e.g., from {@link Status#PENDING_PUBLISHING} to {@link Status#PUBLISHED})
-     * after it has been successfully sent to the message broker.
-     *
-     * @param outboxEvent   The event entity to update.
-     * @param newStatus     The new status to set.
-     */
-    void update(OutboxEvent outboxEvent, Status newStatus);
+    @Transactional
+    @Scheduled(fixedRate = 120000) // 2 min
+    // @Scheduled(cron = "0 0 3 * * 0") // 03:00 Every Sunday
+    public void deletePublished() {
+        this.outboxEventRepository.deleteAll(this.outboxEventRepository.findByStatus(Status.PUBLISHED));
+    }
+
+    @Transactional
+    public void update(OutboxEvent outboxEvent, Status newStatus) {
+        outboxEvent.setStatus(newStatus);
+        this.outboxEventRepository.saveAndFlush(outboxEvent);
+    }
 
 }
